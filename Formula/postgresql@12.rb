@@ -11,7 +11,7 @@ class PostgresqlAT12 < Formula
     depends_on "docbook-xsl" => :build
   end
 
-  keg_only :versioned_formula
+  # keg_only :versioned_formula
 
   option "with-cassert", "Enable assertion checks (for debugging)"
   deprecated_option "enable-cassert" => "with-cassert"
