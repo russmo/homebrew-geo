@@ -50,8 +50,10 @@ class PostgresqlAT12 < Formula
     args += [
       "--prefix=#{prefix}",
       # "bindir=#{bin}", # if define this, will refer to /Cellar
-      "--datadir=#{share}/postgresql",
-      "--libdir=#{lib}/postgresql",
+      # "--datadir=#{share}/postgresql",
+      # "--libdir=#{lib}/postgresql",
+      "--datadir=#{HOMEBREW_PREFIX}/share/postgresql",
+      "--libdir=#{HOMEBREW_PREFIX}/lib/postgresql",
       "--sysconfdir=#{etc}",
       "--docdir=#{doc}/postgresql",
       "--includedir=#{include}/postgresql"
@@ -90,7 +92,9 @@ class PostgresqlAT12 < Formula
     ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog"
 
     system "./configure", *args
-    system "make", "install-world"
+    system "make", "install-world", "datadir=#{pkgshare}",
+                                    "libdir=#{lib}",
+                                    "pkglibdir=#{lib}/postgresql"
   end
 
   def caveats; <<~EOS
