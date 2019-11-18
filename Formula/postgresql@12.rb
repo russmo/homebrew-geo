@@ -47,6 +47,29 @@ class PostgresqlAT12 < Formula
       XML2_CONFIG=:
     ]
 
+    args += [
+      "--prefix=#{prefix}",
+      # "bindir=#{bin}", # if define this, will refer to /Cellar
+      "--datadir=#{share}/postgresql",
+      "--libdir=#{lib}/postgresql",
+      "--sysconfdir=#{etc}",
+      "--docdir=#{doc}/postgresql",
+      "--includedir=#{include}/postgresql"
+    ]
+
+    dirs = [
+      # "bindir=#{bin}",
+      "datadir=#{share}/postgresql", # #{pkgshare}
+      "libdir=#{lib}",
+      "pkglibdir=#{lib}/postgresql", # #{lib}
+      "pkgincludedir=#{include}/postgresql",
+      "sysconfdir=#{etc}",
+      "includedir=#{include}",
+      "localedir=#{share}/locale",
+      "mandir=#{man}",
+      "docdir=#{share}/doc/postgresql",
+    ]
+
     # Add include and library directories of dependencies, so that
     # they can be used for compiling extensions.  Superenv does this
     # when compiling this package, but won't record it for pg_config.
