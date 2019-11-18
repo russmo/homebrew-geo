@@ -113,6 +113,11 @@ class PostgresqlAT12 < Formula
       <string>#{var}/log/#{name}.log</string>
       <key>StandardErrorPath</key>
       <string>#{var}/log/#{name}.log</string>
+      <key>EnvironmentVariables</key>
+      <dict>
+        <key>LC_ALL</key>
+        <string>en_US.UTF-8</string>
+      </dict>
     </dict>
     </plist>
   EOS
