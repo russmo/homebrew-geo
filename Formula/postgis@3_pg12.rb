@@ -18,7 +18,7 @@ class PostgisAT3Pg12 < Formula
   depends_on "geos"
   depends_on "json-c" # for GeoJSON and raster handling
   depends_on "pcre"
-  depends_on "russmo/geo/postgresql" # postgresql 12.1 from russmo/geo tap
+  depends_on "postgresql@12"
   depends_on "proj"
   depends_on "protobuf-c" # for MVT (map vector tiles) support
   depends_on "sfcgal" # for advanced 2D/3D functions
@@ -29,7 +29,7 @@ class PostgisAT3Pg12 < Formula
     args = [
       "--with-projdir=#{Formula["proj"].opt_prefix}",
       "--with-jsondir=#{Formula["json-c"].opt_prefix}",
-      "--with-pgconfig=#{Formula["russmo/geo/postgresql"].opt_bin}/pg_config",
+      "--with-pgconfig=#{Formula["postgresql@12"].opt_bin}/pg_config",
       "--with-protobufdir=#{Formula["protobuf-c"].opt_bin}",
       # Unfortunately, NLS support causes all kinds of headaches because
       # PostGIS gets all of its compiler flags from the PGXS makefiles. This
