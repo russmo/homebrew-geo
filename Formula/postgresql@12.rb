@@ -1,4 +1,4 @@
-class Postgresql < Formula
+class PostgresqlAT12 < Formula
   desc "Object-relational database system"
   homepage "https://www.postgresql.org/"
   version = "12.1"
