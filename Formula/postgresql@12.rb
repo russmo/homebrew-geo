@@ -1,10 +1,10 @@
-class PostgresqlAT12 < Formula
-  desc "Relational database management system"
+class Postgresql < Formula
+  desc "Object-relational database system"
   homepage "https://www.postgresql.org/"
   version = "12.1"
   url "https://ftp.postgresql.org/pub/source/v#{version}/postgresql-#{version}.tar.bz2"
   sha256 "a09bf3abbaf6763980d0f8acbb943b7629a8b20073de18d867aecdb7988483ed"
-
+  
   head do
     url "https://git.postgresql.org/git/postgresql.git", :branch => "REL_12_STABLE"
 
@@ -28,10 +28,20 @@ class PostgresqlAT12 < Formula
   depends_on "llvm" => :optional
 
   def install
+    # avoid adding the SDK library directory to the linker search path
+    ENV["XML2_CONFIG"] = "xml2-config --exec-prefix=/usr"
+
+    ENV.prepend "LDFLAGS", "-L#{Formula["openssl"].opt_lib} -L#{Formula["readline"].opt_lib}"
+    ENV.prepend "CPPFLAGS", "-I#{Formula["openssl"].opt_include} -I#{Formula["readline"].opt_include}"
+
     args = %W[
+      --disable-debug
       --prefix=#{prefix}
-      --enable-dtrace
-      --enable-nls
+      --datadir=#{HOMEBREW_PREFIX}/share/postgresql
+      --libdir=#{HOMEBREW_PREFIX}/lib
+      --sysconfdir=#{etc}
+      --docdir=#{doc}
+      --enable-thread-safety
       --with-bonjour
       --with-gssapi
       --with-icu
@@ -39,12 +49,12 @@ class PostgresqlAT12 < Formula
       --with-libxml
       --with-libxslt
       --with-openssl
-      --with-uuid=e2fs
       --with-pam
       --with-perl
+      --with-uuid=e2fs
+      --enable-dtrace
+      --enable-nls
       --with-python
-      --with-tcl
-      XML2_CONFIG=:
     ]
 
     args += [
@@ -59,18 +69,12 @@ class PostgresqlAT12 < Formula
       "--includedir=#{include}/postgresql"
     ]
 
-    dirs = [
-      # "bindir=#{bin}",
-      "datadir=#{share}/postgresql", # #{pkgshare}
-      "libdir=#{lib}",
-      "pkglibdir=#{lib}/postgresql", # #{lib}
-      "pkgincludedir=#{include}/postgresql",
-      "sysconfdir=#{etc}",
-      "includedir=#{include}",
-      "localedir=#{share}/locale",
-      "mandir=#{man}",
-      "docdir=#{share}/doc/postgresql",
-    ]
+    # The CLT is required to build Tcl support on 10.7 and 10.8 because
+    # tclConfig.sh is not part of the SDK
+    args << "--with-tcl"
+    if File.exist?("#{MacOS.sdk_path}/System/Library/Frameworks/Tcl.framework/tclConfig.sh")
+      args << "--with-tclconfig=#{MacOS.sdk_path}/System/Library/Frameworks/Tcl.framework"
+    end
 
     # Add include and library directories of dependencies, so that
     # they can be used for compiling extensions.  Superenv does this
@@ -86,33 +90,28 @@ class PostgresqlAT12 < Formula
 
     extra_version = ""
     extra_version += "+git" if build.head?
-    extra_version += " (Homebrew petere/postgresql)"
+    extra_version += " (Homebrew russmo/geo)"
     args << "--with-extra-version=#{extra_version}"
 
-    ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog"
-
     system "./configure", *args
+    system "make"
     system "make", "install-world", "datadir=#{pkgshare}",
                                     "libdir=#{lib}",
                                     "pkglibdir=#{lib}/postgresql"
   end
 
+  def post_install
+    (var/"log").mkpath
+    (var/"postgres").mkpath
+    unless File.exist? "#{var}/postgresql@12/PG_VERSION"
+      system "#{bin}/initdb", "--locale=en_US.UTF-8", "-E", "UTF-8", "#{var}/postgresql@12"
+    end
+  end
+
   def caveats; <<~EOS
-    To use this PostgreSQL installation, do one or more of the following:
-
-    - Call all programs explicitly with #{opt_prefix}/bin/...
-    - Add #{opt_bin} to your PATH
-    - brew link -f #{name}
-    - Install the postgresql-common package
-
-    To access the man pages, do one or more of the following:
-    - Refer to them by their full path, like `man #{opt_share}/man/man1/psql.1`
-    - Add #{opt_share}/man to your MANPATH
-    - brew link -f #{name}
-
     To migrate existing data from a previous major version of PostgreSQL run:
       brew postgresql-upgrade-database
-    EOS
+  EOS
   end
 
   plist_options :manual => "pg_ctl -D #{HOMEBREW_PREFIX}/var/postgresql@12 start"
@@ -151,6 +150,9 @@ class PostgresqlAT12 < Formula
   end
 
   test do
-    system "#{bin}/initdb", "pgdata"
+    system "#{bin}/initdb", testpath/"test"
+    assert_equal "#{HOMEBREW_PREFIX}/share/postgresql", shell_output("#{bin}/pg_config --sharedir").chomp
+    assert_equal "#{HOMEBREW_PREFIX}/lib", shell_output("#{bin}/pg_config --libdir").chomp
+    assert_equal "#{HOMEBREW_PREFIX}/lib/postgresql", shell_output("#{bin}/pg_config --pkglibdir").chomp
   end
 end
